@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <p>
+        <label for="">Image Name</label>
+        <input type="text" name="" id="namebox">
+        <label for="" id="extlab"></label>
+        <br>
+        <br>
+        <img id="myimg">
+        <label id="upprogress"></label>
+        <br>
+        <br>
+        <button id="selbtn">select image</button>
+        <button id="upbtn">Upload Image</button>
+        <button id="dwonbtn">Download Image</button>
+    </p>
+
+
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
+        import { getStorage, ref as sRef,uploadBytesResumable,getDownloadURL } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-storage.js";
+        const firebaseConfig = {
+            apiKey: "AIzaSyD5YUAcIu9vSsGCHtvAfdRaXbD5MFqVHz4",
+            authDomain: "gstasindh-db.firebaseapp.com",
+            databaseURL: "https://gstasindh-db-default-rtdb.firebaseio.com",
+            projectId: "gstasindh-db",
+            storageBucket: "gstasindh-db.appspot.com",
+            messagingSenderId: "517496620004",
+            appId: "1:517496620004:web:5e03e45bab78a073d2bdf1",
+            measurementId: "G-PMQKW97CEY"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        //const analytics = getAnalytics(app);
+        let files = []
+        let reader = new FileReader()
+
+        let namebox = document.getElementById('namebox')
+        let extlab = document.getElementById('extlab')
+        let myimg = document.getElementById('myimg')
+        let upprogress = document.getElementById('upprogress')
+        let selbtn = document.getElementById('selbtn')
+        let upbtn = document.getElementById('upbtn')
+        let dwonbtn = document.getElementById('dwonbtn')
+
+        let input = document.createElement('input')
+        input.type = 'file'
+
+        input.onchange = e => {
+            files = e.target.files
+            var extension = GetExtName(files[0])
+            var name = GetFileName(files[0])
+            console.log(name)
+            namebox.value = name
+            extlab.innerHTML = extension
+            reader.readAsDataURL(files[0])
+        }
+
+        reader.onload = function () {
+            myimg.src = reader.result
+        }
+
+
+        selbtn.onclick = function(){
+            input.click()
+        }
+
+        function GetExtName(file){
+            var temp = file.name.split('.')
+            var ext =temp.slice((temp.length - 1),temp.length)
+            return '.' + ext[0]
+
+        }
+
+        function GetFileName(file){
+            var temp = file.name.split('.')
+            var fname = temp.slice(0,-1).join('.')
+            return fname
+        }
+
+        const storage = getStorage()
+        
+        async function uploadProcess(){
+            console.log('fired')
+            let imageToUpload = files[0]
+            let imageName = namebox.value + extlab.innerHTML
+            const metaData = {
+                contentType : imageToUpload.type
+
+            }
+            const storageRef = sRef(storage, "Images/" + imageName)
+            const uploadTask = uploadBytesResumable(storageRef,imageToUpload,metaData)
+            uploadTask.on('state-changed',(snapshot)=>{
+                var progress = (snapshot.bytesTransferred/snapshot.totalBytes) * 100
+                upprogress.innerHTML = "Upload " + progress + '%'
+            },(error)=>{
+                alert('error')
+            },()=>{
+                getDownloadURL(uploadTask.snapshot.ref).then((downURL)=>{
+                    console.log(downURL)
+                })
+            })
+
+        }
+
+        upbtn.onclick = uploadProcess
+
+    </script>
+</body>
+
+</html>
